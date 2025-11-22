@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>귀여운 고양이</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #f8b500 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        /* 방 배경 요소들 */
+        .room {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .floor {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30%;
+            background: linear-gradient(to bottom, #d4a574 0%, #c4956a 100%);
+            border-top: 4px solid #8b6914;
+        }
+
+        .wall {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 70%;
+            background: linear-gradient(to bottom, #fff5e6 0%, #ffe4c4 100%);
+        }
+
+        /* 창문 */
+        .window {
+            position: absolute;
+            top: 15%;
+            right: 10%;
+            width: 120px;
+            height: 150px;
+            background: linear-gradient(135deg, #87ceeb 0%, #98d8f0 100%);
+            border: 8px solid #8b6914;
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        .window::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #8b6914;
+            transform: translateY(-50%);
+        }
+
+        .window::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 4px;
+            height: 100%;
+            background: #8b6914;
+            transform: translateX(-50%);
+        }
+
+        /* 햇살 효과 */
+        .sunlight {
+            position: absolute;
+            top: 15%;
+            right: 5%;
+            width: 200px;
+            height: 300px;
+            background: linear-gradient(180deg, rgba(255,223,100,0.3) 0%, transparent 100%);
+            transform: skewX(-20deg);
+            filter: blur(10px);
+        }
+
+        /* 액자 */
+        .frame {
+            position: absolute;
+            top: 20%;
+            left: 15%;
+            width: 80px;
+            height: 60px;
+            background: #f5deb3;
+            border: 6px solid #8b6914;
+            border-radius: 4px;
+        }
+
+        /* 고양이 컨테이너 */
+        .cat-container {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 고양이 */
+        .cat {
+            position: relative;
+            animation: jump 1.5s ease-in-out infinite;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .cat:hover {
+            transform: scale(1.1);
+        }
+
+        /* 고양이 몸통 */
+        .cat-body {
+            width: 120px;
+            height: 80px;
+            background: #ff9f43;
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* 무늬 */
+        .stripe {
+            position: absolute;
+            width: 8px;
+            height: 30px;
+            background: #e17055;
+            border-radius: 4px;
+        }
+
+        .stripe:nth-child(1) { top: 10px; left: 30px; transform: rotate(-10deg); }
+        .stripe:nth-child(2) { top: 8px; left: 50px; }
+        .stripe:nth-child(3) { top: 10px; left: 70px; transform: rotate(10deg); }
+
+        /* 고양이 머리 */
+        .cat-head {
+            width: 90px;
+            height: 75px;
+            background: #ff9f43;
+            border-radius: 50% 50% 45% 45%;
+            position: absolute;
+            top: -50px;
+            left: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        /* 귀 */
+        .ear {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 30px solid #ff9f43;
+        }
+
+        .ear-left {
+            top: -20px;
+            left: 5px;
+            transform: rotate(-15deg);
+        }
+
+        .ear-right {
+            top: -20px;
+            right: 5px;
+            transform: rotate(15deg);
+        }
+
+        .ear-inner {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 18px solid #ffb8b8;
+        }
+
+        .ear-left .ear-inner {
+            top: 8px;
+            left: -8px;
+        }
+
+        .ear-right .ear-inner {
+            top: 8px;
+            left: -8px;
+        }
+
+        /* 눈 */
+        .eyes {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+
+        .eye {
+            width: 16px;
+            height: 20px;
+            background: #2d3436;
+            border-radius: 50%;
+            position: relative;
+            animation: blink 3s infinite;
+        }
+
+        .eye::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            top: 4px;
+            left: 3px;
+        }
+
+        /* 코 */
+        .nose {
+            position: absolute;
+            top: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 8px;
+            background: #e17055;
+            border-radius: 50% 50% 40% 40%;
+        }
+
+        /* 입 */
+        .mouth {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 10px;
+        }
+
+        .mouth::before,
+        .mouth::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 8px;
+            border: 2px solid #2d3436;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .mouth::before { left: 0; }
+        .mouth::after { right: 0; }
+
+        /* 수염 */
+        .whiskers {
+            position: absolute;
+            top: 45px;
+            width: 100%;
+        }
+
+        .whisker {
+            position: absolute;
+            width: 25px;
+            height: 2px;
+            background: #2d3436;
+            border-radius: 2px;
+        }
+
+        .whisker:nth-child(1) { left: -15px; top: 0; transform: rotate(-10deg); }
+        .whisker:nth-child(2) { left: -18px; top: 8px; }
+        .whisker:nth-child(3) { left: -15px; top: 16px; transform: rotate(10deg); }
+        .whisker:nth-child(4) { right: -15px; top: 0; transform: rotate(10deg); }
+        .whisker:nth-child(5) { right: -18px; top: 8px; }
+        .whisker:nth-child(6) { right: -15px; top: 16px; transform: rotate(-10deg); }
+
+        /* 꼬리 */
+        .tail {
+            position: absolute;
+            right: -30px;
+            bottom: 20px;
+            width: 50px;
+            height: 15px;
+            background: #ff9f43;
+            border-radius: 10px;
+            transform-origin: left center;
+            animation: wag 0.5s ease-in-out infinite alternate;
+        }
+
+        .tail::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 0;
+            width: 20px;
+            height: 15px;
+            background: #e17055;
+            border-radius: 10px;
+        }
+
+        /* 발 */
+        .paws {
+            position: absolute;
+            bottom: -10px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 15px;
+        }
+
+        .paw {
+            width: 20px;
+            height: 15px;
+            background: #ff9f43;
+            border-radius: 50%;
+        }
+
+        /* 그림자 */
+        .shadow {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            animation: shadow 1.5s ease-in-out infinite;
+        }
+
+        /* 말풍선 */
+        .speech-bubble {
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            font-size: 18px;
+            white-space: nowrap;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+            animation-delay: 1s;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 15px solid white;
+        }
+
+        /* 애니메이션 */
+        @keyframes jump {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-30px);
+            }
+        }
+
+        @keyframes shadow {
+            0%, 100% {
+                transform: translateX(-50%) scale(1);
+                opacity: 0.2;
+            }
+            50% {
+                transform: translateX(-50%) scale(0.7);
+                opacity: 0.1;
+            }
+        }
+
+        @keyframes wag {
+            0% { transform: rotate(-10deg); }
+            100% { transform: rotate(10deg); }
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* 제목 */
+        .title {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 28px;
+            color: #8b6914;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+            z-index: 100;
+        }
+
+        /* 발자국 장식 */
+        .paw-prints {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            opacity: 0.3;
+        }
+
+        .paw-print {
+            font-size: 24px;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        /* 애정도 게이지 */
+        .affection-container {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+        }
+
+        .affection-label {
+            font-size: 16px;
+            color: #8b6914;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .affection-icon {
+            font-size: 20px;
+        }
+
+        .affection-value {
+            font-weight: bold;
+            color: #e17055;
+        }
+
+        .gauge-container {
+            width: 200px;
+            height: 20px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #8b6914;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff6b6b 0%, #ff8e8e 50%, #ff6b6b 100%);
+            border-radius: 8px;
+            transition: width 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gauge-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            to { left: 100%; }
+        }
+
+        .level-indicator {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #8b6914;
+        }
+
+        /* 떠오르는 하트 */
+        .floating-heart {
+            position: absolute;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(0.5);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-50px) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(0.8);
+            }
+        }
+
+        /* 최대 애정도 달성 시 효과 */
+        .max-affection .cat {
+            animation: jump 1s ease-in-out infinite, glow 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                filter: drop-shadow(0 0 10px rgba(255,107,107,0.5));
+            }
+            to {
+                filter: drop-shadow(0 0 20px rgba(255,107,107,0.8));
+            }
+        }
+
+        /* 레벨업 효과 */
+        .level-up-effect {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255,107,107,0.8);
+            animation: levelUp 1.5s ease-out forwards;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* 귀찮음 이펙트 */
+        .annoyed-effect {
+            position: absolute;
+            font-size: 24px;
+            pointer-events: none;
+            animation: annoyedPop 0.8s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes annoyedPop {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(0.5) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-30px) scale(1.3) rotate(10deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-60px) scale(0.8) rotate(-10deg);
+            }
+        }
+
+        /* 귀찮아할 때 고양이 흔들림 */
+        .cat.annoyed {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        /* 게이지 감소 시 빨간색 효과 */
+        .gauge-fill.decreasing {
+            background: linear-gradient(90deg, #a0a0a0 0%, #c0c0c0 50%, #a0a0a0 100%);
+        }
+
+        @keyframes levelUp {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 방 배경 -->
+    <div class="room">
+        <div class="wall"></div>
+        <div class="floor"></div>
+        <div class="window"></div>
+        <div class="sunlight"></div>
+        <div class="frame"></div>
+    </div>
+
+    <!-- 제목 -->
+    <h1 class="title">My Lovely Cat</h1>
+
+    <!-- 애정도 게이지 -->
+    <div class="affection-container">
+        <div class="affection-label">
+            <span class="affection-icon">💕</span>
+            <span>애정도: <span class="affection-value" id="affection-text">0</span>/100</span>
+        </div>
+        <div class="gauge-container">
+            <div class="gauge-fill" id="gauge-fill"></div>
+        </div>
+        <div class="level-indicator" id="level-indicator">Lv.1 낯선 사이</div>
+    </div>
+
+    <!-- 고양이 -->
+    <div class="cat-container">
+        <div class="cat">
+            <!-- 말풍선 -->
+            <div class="speech-bubble">야옹~ 🐱</div>
+
+            <!-- 머리 -->
+            <div class="cat-head">
+                <!-- 귀 -->
+                <div class="ear ear-left">
+                    <div class="ear-inner"></div>
+                </div>
+                <div class="ear ear-right">
+                    <div class="ear-inner"></div>
+                </div>
+
+                <!-- 눈 -->
+                <div class="eyes">
+                    <div class="eye"></div>
+                    <div class="eye"></div>
+                </div>
+
+                <!-- 코 -->
+                <div class="nose"></div>
+
+                <!-- 입 -->
+                <div class="mouth"></div>
+
+                <!-- 수염 -->
+                <div class="whiskers">
+                    <div class="whisker"></div>
+                    <div class="whisker"></div>
+                    <div class="whisker"></div>
+                    <div class="whisker"></div>
+                    <div class="whisker"></div>
+                    <div class="whisker"></div>
+                </div>
+            </div>
+
+            <!-- 몸통 -->
+            <div class="cat-body">
+                <div class="stripe"></div>
+                <div class="stripe"></div>
+                <div class="stripe"></div>
+
+                <!-- 발 -->
+                <div class="paws">
+                    <div class="paw"></div>
+                    <div class="paw"></div>
+                    <div class="paw"></div>
+                    <div class="paw"></div>
+                </div>
+            </div>
+
+            <!-- 꼬리 -->
+            <div class="tail"></div>
+        </div>
+
+        <!-- 그림자 -->
+        <div class="shadow"></div>
+    </div>
+
+    <!-- 발자국 장식 -->
+    <div class="paw-prints">
+        <span class="paw-print">🐾</span>
+        <span class="paw-print">🐾</span>
+        <span class="paw-print">🐾</span>
+    </div>
+
+    <script>
+        // 요소 참조
+        const cat = document.querySelector('.cat');
+        const catContainer = document.querySelector('.cat-container');
+        const bubble = document.querySelector('.speech-bubble');
+        const gaugeFill = document.getElementById('gauge-fill');
+        const affectionText = document.getElementById('affection-text');
+        const levelIndicator = document.getElementById('level-indicator');
+
+        // 애정도 시스템
+        let affection = 0;
+        const maxAffection = 100;
+
+        // 레벨 정의
+        const levels = [
+            { min: 0, name: 'Lv.1 낯선 사이', messages: ['...?', '누구야?', '경계 중...'] },
+            { min: 20, name: 'Lv.2 알게 된 사이', messages: ['야옹~', '뭐야?', '흥...'] },
+            { min: 40, name: 'Lv.3 친해진 사이', messages: ['놀아줘! 🎾', '쓰다듬어줘~', '좋아!'] },
+            { min: 60, name: 'Lv.4 친한 친구', messages: ['배고파~ 🐟', '간식 줘! 🍖', '행복해 💕'] },
+            { min: 80, name: 'Lv.5 베프', messages: ['최고야! ⭐', '사랑해! 💖', '영원히 함께! 🌟'] },
+            { min: 100, name: 'Lv.MAX 소울메이트', messages: ['우리는 하나! 💝', '완벽한 사이! ✨', '영원한 친구! 🎀'] }
+        ];
+
+        // 귀찮아하는 메시지
+        const annoyedMessages = [
+            '귀찮아... 💢',
+            '그만해! 😾',
+            '지금은 싫어 💢',
+            '혼자 있고 싶어...',
+            '너무 많이 만졌어! 😤',
+            '쉿! 🤫'
+        ];
+
+        // 귀찮아할 확률 (20%)
+        const annoyedChance = 0.2;
+
+        // 현재 레벨 가져오기
+        function getCurrentLevel() {
+            for (let i = levels.length - 1; i >= 0; i--) {
+                if (affection >= levels[i].min) {
+                    return levels[i];
+                }
+            }
+            return levels[0];
+        }
+
+        // 게이지 업데이트
+        function updateGauge() {
+            const percentage = (affection / maxAffection) * 100;
+            gaugeFill.style.width = percentage + '%';
+            affectionText.textContent = affection;
+
+            const currentLevel = getCurrentLevel();
+            levelIndicator.textContent = currentLevel.name;
+
+            // 최대 애정도 달성 시 효과
+            if (affection >= maxAffection) {
+                catContainer.classList.add('max-affection');
+            }
+        }
+
+        // 하트 이펙트 생성
+        function createHeart(x, y) {
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.textContent = '❤️';
+
+            // 랜덤 위치 오프셋
+            const offsetX = (Math.random() - 0.5) * 60;
+            const offsetY = (Math.random() - 0.5) * 30;
+
+            heart.style.left = (x + offsetX) + 'px';
+            heart.style.top = (y + offsetY) + 'px';
+
+            document.body.appendChild(heart);
+
+            // 애니메이션 후 제거
+            setTimeout(() => heart.remove(), 1000);
+        }
+
+        // 레벨업 효과
+        function showLevelUpEffect(levelName) {
+            const effect = document.createElement('div');
+            effect.className = 'level-up-effect';
+            effect.innerHTML = '⬆️ LEVEL UP! ⬆️<br>' + levelName;
+            document.body.appendChild(effect);
+
+            setTimeout(() => effect.remove(), 1500);
+        }
+
+        // 귀찮음 이펙트 생성
+        function createAnnoyedEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.className = 'annoyed-effect';
+
+            const emojis = ['💢', '😾', '💨', '😤'];
+            effect.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+            const offsetX = (Math.random() - 0.5) * 60;
+            const offsetY = (Math.random() - 0.5) * 30;
+
+            effect.style.left = (x + offsetX) + 'px';
+            effect.style.top = (y + offsetY) + 'px';
+
+            document.body.appendChild(effect);
+
+            setTimeout(() => effect.remove(), 800);
+        }
+
+        // 시간에 따른 애정도 감소
+        setInterval(() => {
+            if (affection > 0) {
+                affection = Math.max(0, affection - 1);
+                updateGauge();
+
+                // 게이지 감소 효과
+                gaugeFill.classList.add('decreasing');
+                setTimeout(() => gaugeFill.classList.remove('decreasing'), 300);
+            }
+        }, 5000); // 5초마다 1씩 감소
+
+        // 고양이 클릭 이벤트
+        cat.addEventListener('click', (e) => {
+            const rect = cat.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // 귀찮아할지 결정
+            const isAnnoyed = Math.random() < annoyedChance;
+
+            if (isAnnoyed) {
+                // 귀찮아하는 반응
+                affection = Math.max(0, affection - 3);
+                updateGauge();
+
+                // 고양이 흔들림 효과
+                cat.classList.add('annoyed');
+                setTimeout(() => cat.classList.remove('annoyed'), 500);
+
+                // 귀찮음 이펙트
+                for (let i = 0; i < 2; i++) {
+                    setTimeout(() => createAnnoyedEffect(centerX, centerY), i * 150);
+                }
+
+                // 귀찮아하는 메시지
+                const randomMessage = annoyedMessages[Math.floor(Math.random() * annoyedMessages.length)];
+                bubble.textContent = randomMessage;
+                bubble.style.animation = 'none';
+                bubble.offsetHeight;
+                bubble.style.animation = 'fadeIn 0.5s ease forwards';
+
+            } else {
+                // 좋아하는 반응
+                const prevLevel = getCurrentLevel();
+
+                // 애정도 증가
+                if (affection < maxAffection) {
+                    affection = Math.min(affection + 5, maxAffection);
+                    updateGauge();
+                }
+
+                // 레벨업 체크
+                const currentLevel = getCurrentLevel();
+                if (currentLevel.min > prevLevel.min) {
+                    showLevelUpEffect(currentLevel.name);
+                }
+
+                // 하트 이펙트 (여러 개)
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => createHeart(centerX, centerY), i * 100);
+                }
+
+                // 말풍선 메시지
+                const messages = currentLevel.messages;
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                bubble.textContent = randomMessage;
+                bubble.style.animation = 'none';
+                bubble.offsetHeight;
+                bubble.style.animation = 'fadeIn 0.5s ease forwards';
+            }
+        });
+
+        // 초기화
+        updateGauge();
+    </script>
+</body>
+</html>
