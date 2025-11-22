@@ -613,6 +613,115 @@
                 transform: translate(-50%, -50%) scale(1.5);
             }
         }
+
+        /* 쥐 스타일 */
+        .mouse {
+            position: fixed;
+            width: 40px;
+            height: 30px;
+            z-index: 5;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .mouse:hover {
+            transform: scale(1.1);
+        }
+
+        .mouse-body {
+            position: relative;
+            width: 30px;
+            height: 25px;
+            background: #8b7355;
+            border-radius: 50% 50% 45% 45%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .mouse-head {
+            position: absolute;
+            width: 20px;
+            height: 18px;
+            background: #8b7355;
+            border-radius: 50%;
+            top: -8px;
+            left: 5px;
+        }
+
+        .mouse-ear {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #8b7355;
+            border-radius: 50%;
+        }
+
+        .mouse-ear-left {
+            top: -3px;
+            left: 0;
+        }
+
+        .mouse-ear-right {
+            top: -3px;
+            right: 0;
+        }
+
+        .mouse-nose {
+            position: absolute;
+            width: 4px;
+            height: 3px;
+            background: #654321;
+            border-radius: 50%;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .mouse-tail {
+            position: absolute;
+            right: -15px;
+            bottom: 5px;
+            width: 20px;
+            height: 2px;
+            background: #654321;
+            border-radius: 2px;
+        }
+
+        .mouse-tail::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: -1px;
+            width: 8px;
+            height: 2px;
+            background: #654321;
+            border-radius: 2px;
+            transform: rotate(30deg);
+        }
+
+        /* 고양이가 움직일 때 */
+        .cat-container.chasing {
+            transition: all 0.8s ease-in-out;
+        }
+
+        /* 쥐 잡힘 효과 */
+        @keyframes mouseCaught {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.3) rotate(180deg);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .mouse.caught {
+            animation: mouseCaught 0.5s ease-out forwards;
+        }
     </style>
 </head>
 <body>
@@ -818,17 +927,17 @@
             setTimeout(() => effect.remove(), 800);
         }
 
-        // 시간에 따른 애정도 감소
+        // 시간에 따른 애정도 감소 (1분마다 2씩 감소)
         setInterval(() => {
             if (affection > 0) {
-                affection = Math.max(0, affection - 1);
+                affection = Math.max(0, affection - 2);
                 updateGauge();
 
                 // 게이지 감소 효과
                 gaugeFill.classList.add('decreasing');
                 setTimeout(() => gaugeFill.classList.remove('decreasing'), 300);
             }
-        }, 5000); // 5초마다 1씩 감소
+        }, 60000); // 60초(1분)마다 2씩 감소
 
         // 고양이 클릭 이벤트
         cat.addEventListener('click', (e) => {
@@ -893,6 +1002,184 @@
 
         // 초기화
         updateGauge();
+
+        // ===== 쥐 시스템 =====
+        let currentMouse = null;
+        let isChasing = false;
+
+        // 쥐 생성 함수
+        function createMouse() {
+            // 이미 쥐가 있거나 고양이가 쫓는 중이면 생성하지 않음
+            if (currentMouse || isChasing) return;
+
+            const mouse = document.createElement('div');
+            mouse.className = 'mouse';
+
+            // 쥐 구조 만들기
+            mouse.innerHTML = `
+                <div class="mouse-body">
+                    <div class="mouse-head">
+                        <div class="mouse-ear mouse-ear-left"></div>
+                        <div class="mouse-ear mouse-ear-right"></div>
+                        <div class="mouse-nose"></div>
+                    </div>
+                    <div class="mouse-tail"></div>
+                </div>
+            `;
+
+            // 랜덤 시작 위치 (화면 가장자리에서 시작)
+            const side = Math.floor(Math.random() * 4); // 0: 상, 1: 우, 2: 하, 3: 좌
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            let startX, startY;
+            switch(side) {
+                case 0: // 상단
+                    startX = Math.random() * windowWidth;
+                    startY = -50;
+                    break;
+                case 1: // 우측
+                    startX = windowWidth + 50;
+                    startY = Math.random() * windowHeight;
+                    break;
+                case 2: // 하단
+                    startX = Math.random() * windowWidth;
+                    startY = windowHeight + 50;
+                    break;
+                case 3: // 좌측
+                    startX = -50;
+                    startY = Math.random() * windowHeight;
+                    break;
+            }
+
+            mouse.style.left = startX + 'px';
+            mouse.style.top = startY + 'px';
+
+            document.body.appendChild(mouse);
+            currentMouse = mouse;
+
+            // 쥐 이동 시작
+            moveMouseRandomly();
+        }
+
+        // 쥐 랜덤 이동
+        function moveMouseRandomly() {
+            if (!currentMouse || isChasing) return;
+
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            // 랜덤 목표 위치
+            const targetX = Math.random() * (windowWidth - 100) + 50;
+            const targetY = Math.random() * (windowHeight - 100) + 50;
+
+            // 이동 애니메이션
+            const currentX = parseFloat(currentMouse.style.left);
+            const currentY = parseFloat(currentMouse.style.top);
+
+            const distance = Math.sqrt(Math.pow(targetX - currentX, 2) + Math.pow(targetY - currentY, 2));
+            const duration = distance * 5; // 거리에 비례한 시간
+
+            currentMouse.style.transition = `all ${duration}ms linear`;
+            currentMouse.style.left = targetX + 'px';
+            currentMouse.style.top = targetY + 'px';
+
+            // 이동 완료 후 다시 이동하거나 제거
+            setTimeout(() => {
+                if (currentMouse && !isChasing) {
+                    if (Math.random() < 0.3) {
+                        // 30% 확률로 사라짐
+                        removeMouse();
+                    } else {
+                        // 계속 이동
+                        moveMouseRandomly();
+                    }
+                }
+            }, duration);
+        }
+
+        // 쥐 제거
+        function removeMouse() {
+            if (currentMouse) {
+                currentMouse.remove();
+                currentMouse = null;
+            }
+        }
+
+        // 고양이가 쥐 잡기
+        function catchMouse() {
+            if (!currentMouse || isChasing) return;
+
+            isChasing = true;
+            const mouseRect = currentMouse.getBoundingClientRect();
+            const catRect = catContainer.getBoundingClientRect();
+
+            // 고양이 위치 계산
+            const mouseX = mouseRect.left + mouseRect.width / 2;
+            const mouseY = mouseRect.top + mouseRect.height / 2;
+            const catX = catRect.left + catRect.width / 2;
+            const catY = catRect.top + catRect.height / 2;
+
+            // 고양이를 쥐 방향으로 이동
+            catContainer.classList.add('chasing');
+            const offsetX = mouseX - catX;
+            const offsetY = mouseY - catY;
+
+            catContainer.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+
+            // 쥐 잡기 애니메이션
+            setTimeout(() => {
+                if (currentMouse) {
+                    currentMouse.classList.add('caught');
+
+                    // 애정도 증가
+                    affection = Math.min(affection + 10, maxAffection);
+                    updateGauge();
+
+                    // 성공 메시지
+                    bubble.textContent = '잡았다! 🐭✨';
+                    bubble.style.animation = 'none';
+                    bubble.offsetHeight;
+                    bubble.style.animation = 'fadeIn 0.5s ease forwards';
+
+                    // 하트 이펙트
+                    const centerX = mouseRect.left + mouseRect.width / 2;
+                    const centerY = mouseRect.top + mouseRect.height / 2;
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => createHeart(centerX, centerY), i * 100);
+                    }
+
+                    // 쥐 제거
+                    setTimeout(() => removeMouse(), 500);
+                }
+
+                // 고양이 원위치
+                setTimeout(() => {
+                    catContainer.style.transform = '';
+                    catContainer.classList.remove('chasing');
+                    isChasing = false;
+                }, 800);
+            }, 800);
+        }
+
+        // 쥐 자동 생성 (10~30초마다 랜덤)
+        function scheduleNextMouse() {
+            const delay = (Math.random() * 20000) + 10000; // 10~30초
+            setTimeout(() => {
+                createMouse();
+                scheduleNextMouse();
+            }, delay);
+        }
+
+        // 쥐 클릭 시 고양이가 잡으러 감
+        document.body.addEventListener('click', (e) => {
+            if (e.target.closest('.mouse') && currentMouse && !isChasing) {
+                catchMouse();
+            }
+        });
+
+        // 첫 쥐 생성 예약
+        scheduleNextMouse();
     </script>
 </body>
 </html>
